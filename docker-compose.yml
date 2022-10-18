@@ -3,12 +3,14 @@ version: '3.8'
 
 services:
   runner:
-    image: pwd9000-github-runner-win:latest
     build:
       context: .
+      dockerfile: Dockerfile
       args:
         RUNNER_VERSION: '2.292.0'
     environment:
-      GH_TOKEN: ${GH_TOKEN}
-      GH_OWNER: ${GH_OWNER}
-      GH_REPOSITORY: ${GH_REPOSITORY}
+      NAME: "gh-runner-win-1"
+      LABELS: XRAYTemp
+      GROUPS: flock
+    env_file:
+      - ./variables.env

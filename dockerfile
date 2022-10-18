@@ -12,16 +12,10 @@
 #FROM mcr.microsoft.com/windows/servercore/insider:10.0.19035.1
 
 #Win11
-FROM mcr.microsoft.com/windows/servercore/insider:10.0.20348.1
+FROM mcr.microsoft.com/windows/servercore:10.0.14393.5427-amd64
 
 #input GitHub runner version argument
 ARG RUNNER_VERSION
-
-LABEL Author="Marcel L"
-LABEL Email="pwd9000@hotmail.co.uk"
-LABEL GitHub="https://github.com/Pwd9000-ML"
-LABEL BaseImage="servercore/insider:10.0.20348.1"
-LABEL RunnerVersion=${RUNNER_VERSION}
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
 
@@ -37,8 +31,7 @@ RUN .\Install-Choco.ps1 -Wait; \
 RUN choco install -y \
     git \
     gh \
-    powershell-core \
-    azure-cli
+    powershell-core
 
 #Download GitHub Runner based on RUNNER_VERSION argument (Can use: Docker build --build-arg RUNNER_VERSION=x.y.z)
 RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/v$env:RUNNER_VERSION/actions-runner-win-x64-$env:RUNNER_VERSION.zip" -OutFile "actions-runner.zip"; \

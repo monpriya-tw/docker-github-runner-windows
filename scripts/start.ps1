@@ -4,9 +4,13 @@ Param (
     [Parameter(Mandatory = $false)]
     [string]$owner = $env:GH_OWNER,
     [Parameter(Mandatory = $false)]
-    [string]$repo = $env:GH_REPOSITORY,
+    [string]$pat = $env:GH_TOKEN,
     [Parameter(Mandatory = $false)]
-    [string]$pat = $env:GH_TOKEN
+    [string]$runnerName = $env:NAME,
+    [Parameter(Mandatory = $false)]
+    [string]$labels = $env:LABELS,
+    [Parameter(Mandatory = $false)]
+    [string]$groups = $env:GROUPS
 )
 
 #Use --with-token to pass in a PAT token on standard input. The minimum required scopes for the token are: "repo", "read:org".
@@ -15,15 +19,13 @@ Param (
 gh auth login
 
 #Get Runner registration Token
-$jsonObj = gh api --method POST -H "Accept: application/vnd.github.v3+json" "/repos/$owner/$repo/actions/runners/registration-token"
+$jsonObj = gh api --method POST -H "Accept: application/vnd.github.v3+json" "/orgs/$owner/actions/runners/registration-token"
 $regToken = (ConvertFrom-Json -InputObject $jsonObj).token
-$runnerBaseName = "dockerNode-"
-$runnerName = $runnerBaseName + (((New-Guid).Guid).replace("-", "")).substring(0, 5)
 
 try {
     #Register new runner instance
-    write-host "Registering GitHub Self Hosted Runner on: $owner/$repo"
-    ./config.cmd --unattended --url "https://github.com/$owner/$repo" --token $regToken --name $runnerName
+    write-host "Registering GitHub Self Hosted Runner on: $owner"
+    ./config.cmd --unattended --url "https://github.com/$owner" --token $regToken --name $runnerName --labels $labels --runnergroup $groups
 
     #Remove PAT token after registering new instance
     $pat=$null
