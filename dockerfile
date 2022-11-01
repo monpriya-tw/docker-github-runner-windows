@@ -12,7 +12,10 @@
 #FROM mcr.microsoft.com/windows/servercore/insider:10.0.19035.1
 
 #Win11
-FROM mcr.microsoft.com/windows/servercore:10.0.14393.5427-amd64
+#FROM mcr.microsoft.com/windows/servercore:10.0.14393.5427-amd64
+
+# FROM mcr.microsoft.com/windows/servercore:ltsc2022
+FROM mcr.microsoft.com/dotnet/framework/aspnet:4.7.2
 
 #input GitHub runner version argument
 ARG RUNNER_VERSION
@@ -31,7 +34,9 @@ RUN .\Install-Choco.ps1 -Wait; \
 RUN choco install -y \
     git \
     gh \
-    powershell-core
+    powershell-core \
+    nodejs-lts \ 
+    yarn 
 
 #Download GitHub Runner based on RUNNER_VERSION argument (Can use: Docker build --build-arg RUNNER_VERSION=x.y.z)
 RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/v$env:RUNNER_VERSION/actions-runner-win-x64-$env:RUNNER_VERSION.zip" -OutFile "actions-runner.zip"; \
@@ -40,5 +45,5 @@ RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/
 
 #Add GitHub runner configuration startup script
 ADD scripts/start.ps1 .
-ADD scripts/Cleanup-Runners.ps1 .
+# ADD scripts/Cleanup-Runners.ps1 .
 ENTRYPOINT ["pwsh.exe", ".\\start.ps1"]

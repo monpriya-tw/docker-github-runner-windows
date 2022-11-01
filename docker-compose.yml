@@ -7,7 +7,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        RUNNER_VERSION: '2.292.0'
+        RUNNER_VERSION: '2.298.2'
     environment:
       NAME: "gh-runner-win-1"
       LABELS: XRAYTemp
