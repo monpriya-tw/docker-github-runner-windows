@@ -25,7 +25,7 @@ Param (
 try {
     #Register new runner instance
     write-host "Registering GitHub Self Hosted Runner on: $owner"
-    ./config.cmd --unattended --url "https://github.com/JetstarAirways" --token $regToken --replace --name $runnerName --labels $labels --runnergroup $groups
+    ./config.cmd --unattended --url "https://github.com/JetstarAirways/jetstar-dotrez" --token $regToken --replace --name $runnerName --labels $labels --runnergroup $groups
 
     #Remove PAT token after registering new instance
     $pat=$null
