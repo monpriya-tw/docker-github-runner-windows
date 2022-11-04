@@ -1,29 +1,15 @@
-##### BASE IMAGE INFO ######
-#Using servercore insider edition for compacted size.
-#For compatibility on "your" host running docker you may need to use a specific tag.
-#E.g. the host OS version must match the container OS version. 
-#If you want to run a container based on a newer Windows build, make sure you have an equivalent host build. 
-#Otherwise, you can use Hyper-V isolation to run older containers on new host builds. 
-#The default entrypoint is for this image is Cmd.exe. To run the image:
-#docker run mcr.microsoft.com/windows/servercore/insider:10.0.{build}.{revision}
-#tag reference: https://mcr.microsoft.com/en-us/product/windows/servercore/insider/tags
-
-#Win10
-#FROM mcr.microsoft.com/windows/servercore/insider:10.0.19035.1
-
-#Win11
-#FROM mcr.microsoft.com/windows/servercore:10.0.14393.5427-amd64
-
-# FROM mcr.microsoft.com/windows/servercore:ltsc2022
-FROM mcr.microsoft.com/dotnet/framework/aspnet:4.7.2
+# FROM mcr.microsoft.com/windows/servercore:ltsc2019
+# FROM mcr.microsoft.com/dotnet/framework/aspnet:4.7.2
+# FROM mcr.microsoft.com/dotnet/sdk:7.0.100-rc.2-windowsservercore-ltsc2019
+FROM mcr.microsoft.com/dotnet/framework/sdk:4.7.2-windowsservercore-ltsc2019
 
 #input GitHub runner version argument
 ARG RUNNER_VERSION
 
-SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
-
 #Set working directory
 WORKDIR /actions-runner
+
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
 
 #Install chocolatey
 ADD scripts/Install-Choco.ps1 .
@@ -34,16 +20,31 @@ RUN .\Install-Choco.ps1 -Wait; \
 RUN choco install -y \
     git \
     gh \
-    powershell-core \
     nodejs-lts \ 
     yarn 
+
+RUN choco install -y dotnetcore-sdk --version 2.1.526
+# RUN choco install -y dotnetfx --version=4.7.2.20180712
 
 #Download GitHub Runner based on RUNNER_VERSION argument (Can use: Docker build --build-arg RUNNER_VERSION=x.y.z)
 RUN Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/download/v$env:RUNNER_VERSION/actions-runner-win-x64-$env:RUNNER_VERSION.zip" -OutFile "actions-runner.zip"; \
     Expand-Archive -Path ".\\actions-runner.zip" -DestinationPath '.'; \
     Remove-Item ".\\actions-runner.zip" -Force
 
+SHELL ["cmd", "/S", "/C"]
+
+RUN curl -SL --output vs_buildtools.exe https://aka.ms/vs/15/release/vs_buildtools.exe \
+    && (start /w vs_buildtools.exe --quiet --wait --norestart --nocache \
+        --installPath "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\BuildTools" \
+        --add Microsoft.VisualStudio.Workload.AzureBuildTools \
+        --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 \
+        --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 \
+        --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 \
+        --remove Microsoft.VisualStudio.Component.Windows81SDK \
+        || IF "%ERRORLEVEL%"=="3010" EXIT 0) \
+    && del /q vs_buildtools.exe
+
 #Add GitHub runner configuration startup script
 ADD scripts/start.ps1 .
 # ADD scripts/Cleanup-Runners.ps1 .
-ENTRYPOINT ["pwsh.exe", ".\\start.ps1"]
+ENTRYPOINT ["C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\Common7\\Tools\\VsDevCmd.bat", "&&", "powershell.exe", ".\\start.ps1"]
