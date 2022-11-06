@@ -1,7 +1,7 @@
-# FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM mcr.microsoft.com/windows/servercore:ltsc2019
 # FROM mcr.microsoft.com/dotnet/framework/aspnet:4.7.2
 # FROM mcr.microsoft.com/dotnet/sdk:7.0.100-rc.2-windowsservercore-ltsc2019
-FROM mcr.microsoft.com/dotnet/framework/sdk:4.7.2-windowsservercore-ltsc2019
+# FROM mcr.microsoft.com/dotnet/framework/sdk:4.7.2-windowsservercore-ltsc2019
 
 #input GitHub runner version argument
 ARG RUNNER_VERSION
@@ -9,19 +9,23 @@ ARG RUNNER_VERSION
 #Set working directory
 WORKDIR /actions-runner
 
-
 SHELL ["cmd", "/S", "/C"]
 
 RUN curl -SL --output vs_buildtools.exe https://aka.ms/vs/15/release/vs_buildtools.exe \
     && (start /w vs_buildtools.exe --quiet --wait --norestart --nocache \
         --installPath "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\BuildTools" \
-        --add Microsoft.VisualStudio.Workload.AzureBuildTools \
-        --remove Microsoft.VisualStudio.Component.Windows10SDK.10240 \
-        --remove Microsoft.VisualStudio.Component.Windows10SDK.10586 \
-        --remove Microsoft.VisualStudio.Component.Windows10SDK.14393 \
-        --remove Microsoft.VisualStudio.Component.Windows81SDK \
+        --add Microsoft.Net.Component.4.7.2.SDK \
+        --add Microsoft.Net.Component.4.7.2.TargetingPack \
+        --add Microsoft.Net.ComponentGroup.4.7.2.DeveloperTools \
+        --add Microsoft.VisualStudio.Component.NuGet \
+        --add Microsoft.VisualStudio.Component.NuGet.BuildTools \
         || IF "%ERRORLEVEL%"=="3010" EXIT 0) \
     && del /q vs_buildtools.exe
+
+ADD "https://dist.nuget.org/win-x86-commandline/v4.7.0/nuget.exe" "C:\TEMP\nuget.exe"
+
+# Install SSDT NuGet
+RUN "C:\TEMP\nuget.exe" install Microsoft.Data.Tools.Msbuild -Version 10.0.61804.210
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop';"]
 
@@ -43,8 +47,10 @@ RUN choco install -y \
     nodejs-lts \
     yarn
 
-RUN choco install -y dotnetcore-sdk --version 2.1.526
+# RUN choco install -y dotnetcore-sdk --version 2.1.526
 # RUN choco install -y dotnetfx --version=4.7.2.20180712
+# RUN choco install -y --ignore-package-exit-codes=3010 dotnetfx
+# RUN choco install -y visualstudio2017buildtools --package-parameters "--norestart"
 
 #Add GitHub runner configuration startup script
 
