@@ -45,7 +45,8 @@ RUN choco install -y \
     git \
     gh \
     nodejs-lts \
-    yarn
+    yarn \
+    opencover
 
 # RUN choco install -y dotnetcore-sdk --version 2.1.526
 # RUN choco install -y dotnetfx --version=4.7.2.20180712
